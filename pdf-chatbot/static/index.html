@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF AI Chatbot</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- LEFT PANEL -->
+
+    <div class="sidebar">
+
+        <div class="bot-profile">
+
+            <div class="bot-avatar">
+                🤖
+            </div>
+
+            <h2>PDF AI</h2>
+
+            <p>
+                Upload your PDF and chat with it.
+            </p>
+
+        </div>
+
+        <div class="upload-box">
+
+            <h3>Upload PDF</h3>
+
+            <input type="file" id="pdfFile">
+
+            <button onclick="uploadPDF()">
+                Upload PDF
+            </button>
+
+            <div id="uploadStatus">
+                No PDF uploaded
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+
+    <div class="chat-section">
+
+        <div class="chat-header">
+            PDF Chat Assistant
+        </div>
+
+        <div id="chatMessages" class="chat-messages">
+
+            <div class="bot-message">
+                👋 Hi! Upload a PDF and ask me anything.
+            </div>
+
+        </div>
+
+        <div class="chat-input">
+
+            <input
+                type="text"
+                id="question"
+                placeholder="Ask something..."
+            >
+
+            <button onclick="askQuestion()">
+                Send
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>
+```
