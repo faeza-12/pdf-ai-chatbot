@@ -18,7 +18,7 @@ async function uploadPDF() {
         "Uploading PDF...";
 
     const response = await fetch(
-        "http://127.0.0.1:8000/upload",
+        "/upload",
         {
             method: "POST",
             body: formData
