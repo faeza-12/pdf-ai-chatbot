@@ -1,6 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
 from pypdf import PdfReader
-from sentence_transformers import SentenceTransformer
 import chromadb
 import tempfile
 from dotenv import load_dotenv
@@ -12,15 +11,16 @@ from fastapi.responses import FileResponse
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 load_dotenv()
 
 groq_client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
-# Load embedding model
-model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# ChromaDB
+# TEMPORARILY REMOVED
+# model = SentenceTransformer("all-MiniLM-L6-v2")
+
 client = chromadb.Client()
 
 collection = client.get_or_create_collection(
@@ -44,56 +44,18 @@ def home():
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-
-    # Save uploaded PDF temporarily
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file.write(await file.read())
-        temp_path = temp_file.name
-
-    # Read PDF
-    reader = PdfReader(temp_path)
-
-    text = ""
-
-    for page in reader.pages:
-        page_text = page.extract_text()
-
-        if page_text:
-            text += page_text
-
-    # Chunk text
-    chunks = chunk_text(text)
-
-    # Create embeddings
-    embeddings = model.encode(chunks).tolist()
-
-    # Store in ChromaDB
-    collection.add(
-        documents=chunks,
-        embeddings=embeddings,
-        ids=[str(i) for i in range(len(chunks))]
-    )
-
     return {
-        "message": "PDF stored successfully",
-        "chunks": len(chunks)
+        "message": "Deployment test successful"
     }
 
 
 @app.get("/search")
 def search(query: str):
-
-    query_embedding = model.encode(query).tolist()
-
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=3
-    )
-
     return {
         "query": query,
-        "results": results["documents"][0]
+        "results": ["Deployment test successful"]
     }
+
 
 class Question(BaseModel):
     question: str
@@ -102,31 +64,12 @@ class Question(BaseModel):
 @app.post("/ask")
 def ask_question(data: Question):
 
-    query_embedding = model.encode(data.question).tolist()
-
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=3
-    )
-
-    context = "\n".join(results["documents"][0])
-
-    prompt = f"""
-Answer the question using only the context below.
-
-Context:
-{context}
-
-Question:
-{data.question}
-"""
-
     response = groq_client.chat.completions.create(
-    model="llama-3.1-8b-instant",
+        model="llama-3.1-8b-instant",
         messages=[
             {
                 "role": "user",
-                "content": prompt
+                "content": data.question
             }
         ]
     )
@@ -134,8 +77,3 @@ Question:
     return {
         "answer": response.choices[0].message.content
     }
-# model = SentenceTransformer("all-MiniLM-L6-v2")
-# embeddings = model.encode(chunks).tolist()
-# query_embedding = model.encode(query).tolist()
-# query_embedding = model.encode(data.question).tolist()
-    return {"message": "test deploy"}
