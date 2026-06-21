@@ -27,8 +27,10 @@ async function uploadPDF() {
 
     const data = await response.json();
 
-    document.getElementById("uploadStatus").innerText =
-        "✅ PDF uploaded successfully";
+console.log(data);
+
+document.getElementById("uploadStatus").innerText =
+    data.message;
 }
 
 
