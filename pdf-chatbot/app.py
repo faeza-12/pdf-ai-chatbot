@@ -134,3 +134,8 @@ Question:
     return {
         "answer": response.choices[0].message.content
     }
+# model = SentenceTransformer("all-MiniLM-L6-v2")
+# embeddings = model.encode(chunks).tolist()
+# query_embedding = model.encode(query).tolist()
+# query_embedding = model.encode(data.question).tolist()
+    return {"message": "test deploy"}
