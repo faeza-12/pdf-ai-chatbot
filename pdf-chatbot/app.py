@@ -18,15 +18,11 @@ groq_client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-# TEMPORARILY REMOVED
-# model = SentenceTransformer("all-MiniLM-L6-v2")
-
 client = chromadb.Client()
 
 collection = client.get_or_create_collection(
     name="pdf_chunks"
 )
-
 
 def chunk_text(text, size=500):
     chunks = []
@@ -36,18 +32,15 @@ def chunk_text(text, size=500):
 
     return chunks
 
-
 @app.get("/")
 def home():
     return FileResponse("static/index.html")
-
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
     return {
         "message": "Deployment test successful"
     }
-
 
 @app.get("/search")
 def search(query: str):
@@ -56,10 +49,8 @@ def search(query: str):
         "results": ["Deployment test successful"]
     }
 
-
 class Question(BaseModel):
     question: str
-
 
 @app.post("/ask")
 def ask_question(data: Question):
