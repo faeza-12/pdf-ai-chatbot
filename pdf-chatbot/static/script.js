@@ -18,7 +18,7 @@ async function uploadPDF() {
         "Uploading PDF...";
 
     const response = await fetch(
-        "/upload",
+        "https://pdf-ai-chatbot-fhjn.onrender.com/upload",
         {
             method: "POST",
             body: formData
@@ -66,7 +66,7 @@ async function askQuestion() {
     try {
 
         const response = await fetch(
-            "/ask",
+            "https://pdf-ai-chatbot-fhjn.onrender.com/ask",
             {
                 method: "POST",
                 headers: {
