@@ -1,6 +1,9 @@
 from fastapi import FastAPI, UploadFile, File
 from pypdf import PdfReader
-from sentence_transformers import SentenceTransformer
+import re
+import math
+import hashlib
+from chromadb.api.types import EmbeddingFunction
 import chromadb
 import tempfile
 from dotenv import load_dotenv
@@ -20,16 +23,52 @@ groq_client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+
+class SimpleHashEmbeddingFunction(EmbeddingFunction):
+
+    def __call__(self, input):
+
+        embeddings = []
+
+        for text in input:
+
+            vector = [0.0] * 384
+
+            words = re.findall(r"\w+", text.lower())
+
+            for word in words:
+                index = int(
+                    hashlib.md5(word.encode()).hexdigest(),
+                    16
+                ) % 384
+
+                vector[index] += 1.0
+
+            norm = math.sqrt(
+                sum(x * x for x in vector)
+            )
+
+            if norm > 0:
+                vector = [
+                    x / norm
+                    for x in vector
+                ]
+
+            embeddings.append(vector)
+
+        return embeddings
+
 
 client = chromadb.Client()
 
 collection = client.get_or_create_collection(
-    name="pdf_chunks"
+    name="pdf_chunks",
+    embedding_function=SimpleHashEmbeddingFunction()
 )
 
 
 def chunk_text(text, size=500):
+
     chunks = []
 
     for i in range(0, len(text), size):
@@ -55,14 +94,13 @@ async def upload_pdf(file: UploadFile = File(...)):
     text = ""
 
     for page in reader.pages:
+
         extracted = page.extract_text()
 
         if extracted:
             text += extracted
 
     chunks = chunk_text(text)
-
-    embeddings = model.encode(chunks).tolist()
 
     try:
         existing = collection.get()
@@ -75,7 +113,6 @@ async def upload_pdf(file: UploadFile = File(...)):
 
     collection.add(
         documents=chunks,
-        embeddings=embeddings,
         ids=[str(i) for i in range(len(chunks))]
     )
 
@@ -88,12 +125,8 @@ async def upload_pdf(file: UploadFile = File(...)):
 @app.get("/search")
 def search(query: str):
 
-    query_embedding = model.encode(
-        [query]
-    ).tolist()[0]
-
     results = collection.query(
-        query_embeddings=[query_embedding],
+        query_texts=[query],
         n_results=3
     )
 
@@ -107,12 +140,8 @@ class Question(BaseModel):
 @app.post("/ask")
 def ask_question(data: Question):
 
-    query_embedding = model.encode(
-        [data.question]
-    ).tolist()[0]
-
     results = collection.query(
-        query_embeddings=[query_embedding],
+        query_texts=[data.question],
         n_results=3
     )
 
